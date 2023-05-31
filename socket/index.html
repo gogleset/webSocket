@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h4>채팅페이지입니다.</h4>
+    <input type="text" id="text">
+    <button id="send">메세지 보내기</button>
+</body>
+<script>
+    // onclick = "socket.send('ㅎㅇ')"
+    // 웹 소켓 열어달라고 서버에게 부탁하는 코드
+    // 웹소켓은 http대신 ws로 통신
+    let socket = new WebSocket("ws://localhost:8081")
+    let inputValue = document.getElementById("text");
+    // inputValue.addEventListener("keyup", (event) => {
+    //     socket.send(event.target.value);
+    // })
+    let button = document.getElementById("send");
+    button.addEventListener("click", (event) => {
+        socket.send(inputValue.value);
+    })
+</script>
+
+</html>

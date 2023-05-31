@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Websocket Chatting</title>
+</head>
+
+<body>
+    <h1>Hudi Chat</h1>
+    <div>
+        <input type="text" id="nickname" placeholder="닉네임" style="width: 50px" />
+        <input type="text" id="message" placeholder="메세지" style="width: 200px" />
+        <button onclick="sendMessage()">전송</button>
+    </div>
+
+    <div id="chat-log"></div>
+</body>
+<script>
+    const ws = new WebSocket("ws://localhost:8001")
+
+    // 메세지 전송
+    function sendMessage() {
+        const nickname = document.getElementById("nickname").value
+        const message = document.getElementById("message").value
+        const fullMessage = `${nickname}: ${message}`
+
+        ws.send(fullMessage)
+        clearMessage();
+    }
+
+    // 메세지 수신
+    function receiveMessage(event) {
+        console.log(event);
+        const chat = document.createElement("div")
+        const message = document.createTextNode(event.data)
+        chat.appendChild(message)
+        console.log(chat);
+
+        const chatLog = document.getElementById("chat-log")
+        chatLog.appendChild(chat)
+    }
+    // 메세지 수신할 함수 등록
+    ws.onmessage = receiveMessage
+
+    function clearMessage() {
+        document.getElementById("message").value = ""
+    }
+</script>
+
+</html>
