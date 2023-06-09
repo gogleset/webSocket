@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Socket.io Example</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.2/socket.io.js"></script>
+
+</head>
+
+<body>
+    <h1>Socket.io Example</h1>
+    <input type="text" id="messageInput" placeholder="메시지를 입력하세요" />
+    <button id="buttonInput">전송</button>
+    <button id="roomInput">방입장</button>
+</body>
+
+</html>
+<script>
+    // 보낼 것
+    const answer = "react"
+    const nickname = "asd"
+    let roomNumber;
+    console.log(roomNumber);
+    // Socket.io 클라이언트 인스턴스 생성
+    const socket = io.connect('http://localhost:80', {
+        transports: ['websocket'],
+        cors: {
+            origin: "http://192.168.0.127:5500",
+            methods: ["GET", "POST"],
+        }
+    });
+    //내가 만든 채팅 서버로부터의 메시지 수신
+    socket.on("answer", (data) => {
+        console.log(data);
+        console.log("answer:::" + data);
+    });
+    // 클라이언트
+    socket.on('insert_room', (data) => {
+        const result = data;
+        console.log(result);
+        if (!result.pending) {
+            console.log("result.roomNum " + result.roomNum);
+            // 방 넘버
+            roomNumber = String(result.roomNum);
+            console.log("roomNumber " + roomNumber);
+            console.log("client roomNumber ::: " + roomNumber);
+        }
+    })
+
+    // 메시지 전송 함수
+    function sendMessage(value) {
+        console.log("sendMessage ::: ");
+        console.log(value);
+        // 서버로 메시지 전송
+        socket.emit("new_message", value);
+    }
+
+    function intoRoom(value, answer) {
+        console.log("intoRoom");
+        const message = {
+            length: 5
+        };
+        // 서버로 메시지 전송
+        socket.emit('insert_room', message);
+    }
+
+    // 버튼이벤트 감지
+    document.getElementById("buttonInput").addEventListener("click", (event) => {
+        const input = document.getElementById("messageInput").value;
+        console.log(input);
+        sendMessage({ roomNum: roomNumber, value: input })
+    })
+
+    // 방 입장 이벤트
+    document.getElementById("roomInput").addEventListener("click", (event) => {
+        const input = document.getElementById("messageInput").value;
+        intoRoom(input, answer)
+    })
+</script>
