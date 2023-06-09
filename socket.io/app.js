@@ -42,6 +42,7 @@ io.on('connection', (socket) => {
   });
   // 방 입장
   socket.on('insert_room', (msg) => {
+    let value;
     console.log(`msg::: ${JSON.stringify(msg)}`);
     // 초기값 0
     if (userNumber === 1) {
@@ -56,28 +57,33 @@ io.on('connection', (socket) => {
       // 유저넘버 증가시켜
       userNumber = userNumber + 1; 
     } else if (userNumber === 2) {
-         con.query(
-           `SELECT answer FROM problem WHERE length = ? ORDER BY rand() LIMIT 1`,
-           [msg.length],
-           (err, result) => {
-             if (err) {
-               console.log(1);
-               res.send('SQL 에러 발생');
-             } else {
-               if (result.length != 0) {
-                 console.log(2);
-                 socket.emit('insert_room', {
-                   roomNum: roomNumber,
-                   pending: false,
-                   result : "success",
-                   userNumber: userNumber,
-                   value: result[0]['answer'],
-                 });
-               } else {
-               }
-             }
-           }
-         );
+      //    con.query(
+      //      `SELECT answer FROM problem WHERE length = ? ORDER BY rand() LIMIT 1`,
+      //      [msg.length],
+      //      (err, result) => {
+      //        if (err) {
+      //          res.send('SQL 에러 발생');
+      //        } else {
+      //          if (result.length != 0) {
+      //            socket.emit('insert_room', {
+      //              roomNum: roomNumber,
+      //              pending: false,
+      //              result: 'success',
+      //              userNumber: userNumber,
+      //              value: result[0]['answer'],
+      //            });
+      //          } else {
+      //          }
+      //        }
+      //      }
+      // );
+       socket.emit('insert_room', {
+         roomNum: roomNumber,
+         pending: false,
+         result: 'success',
+         userNumber: userNumber,
+         value:"react",
+       });
       userNumber = 1;
     }
 
@@ -96,8 +102,9 @@ io.on('connection', (socket) => {
   // 답변받기
   socket.on('new_message', (msg) => { 
     console.log(msg.roomNum, msg.value);
-    socket.emit('answer', msg.value);
-    socket.to(msg.roomNum).emit('answer', msg.value);
+    // socket.emit('answer', msg.value);
+    // 
+    io.to(msg.roomNum).emit('answer', msg.value);
   })
 });
 
