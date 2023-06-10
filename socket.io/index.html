@@ -17,10 +17,10 @@
 </html>
 <script>
     // 보낼 것
-    let answer;
-    const nickname = "asd"
     let roomNumber;
-    console.log(roomNumber);
+    let userNumber;
+    let userTurn = 1;
+    let pending = true;
     // Socket.io 클라이언트 인스턴스 생성
     const socket = io.connect('http://localhost:80', {
         transports: ['websocket'],
@@ -29,51 +29,91 @@
             methods: ["GET", "POST"],
         }
     });
-    //내가 만든 채팅 서버로부터의 메시지 수신
+    //내가 만든 채팅 서버로부터의 메시지 수신 - 답 관리
     socket.on("answer", (data) => {
-        console.log(data);
-        console.log("answer:::" + data);
+        console.log("answer:::" + JSON.stringify(data));
+        // 답을 맞췄을때
+        if (data.result === "success" && data.gameWin === true && data.userNum === userNumber) {
+            // 보상 주어짐
+            alert('you win!');
+            socket.emit('leaveRoom', roomNumber);
+        } else if (data.result === "success" && data.gameWin === true && data.userNum !== userNumber) {
+            alert('you lose..');
+            socket.emit('leaveRoom', roomNumber);
+        }
     });
-    // 클라이언트
+
+    //내가 만든 채팅 서버로부터의 메시지 수신 - pending관리
+    socket.on("pending", (data) => {
+        console.log("pending:::" + JSON.stringify(data));
+        // 서버에 두명이 가득찼거나 서버 통신이 성공이라면
+        if (data.result === "success" && data.pending === false) {
+            pending = data.pending;
+        } else {
+            pending = true;
+        }
+    });
+
+    //내가 만든 채팅 서버로부터의 메시지 수신 - turn관리
+    socket.on("turn", (data) => {
+        console.log("turn:::" + JSON.stringify(data));
+        if (data.result === "success") {
+            userTurn = data.userTurn;
+            console.log("userTurn ::: " + userTurn);
+        }
+    });
+    // 내가 만든 채팅 서버로부터의 메시지 수신 - 방 입장 관리
     socket.on('insert_room', (data) => {
         const result = data;
-        console.log(result);
-        if (!result.pending) {
+        if (result.result === 'success') {
+            console.log(result);
             console.log("result.roomNum " + result.roomNum);
             // 방 넘버
             roomNumber = String(result.roomNum);
+            userNumber = result.userNumber;
             console.log("roomNumber " + roomNumber);
             console.log("client roomNumber ::: " + roomNumber);
         }
     })
 
-    // 메시지 전송 함수
+    // 답변 보내기 함수
     function sendMessage(value) {
         console.log("sendMessage ::: ");
         console.log(value);
         // 서버로 메시지 전송
-        socket.emit("new_message", value);
+        // 턴 넘기기
+        socket.emit("turn", value);
+        // 답 확인
+        socket.emit("answer", value);
     }
 
-    function intoRoom(value, answer) {
+    // 방 입장 요청 함수 - 방 입장 시 글자 수 입력
+    function intoRoom(value = 5) {
         console.log("intoRoom");
         const message = {
-            length: 5
+            length: value
         };
         // 서버로 메시지 전송
         socket.emit('insert_room', message);
     }
 
-    // 버튼이벤트 감지
+    // 버튼이벤트 감지(전송버튼)
     document.getElementById("buttonInput").addEventListener("click", (event) => {
-        const input = document.getElementById("messageInput").value;
-        console.log(input);
-        sendMessage({ roomNum: roomNumber, value: input })
+        // 다른 사람을 기다리고 있을 때 버튼을 누르면
+        if (pending) return console.log("pending!!!!");
+        // 내 턴이면
+        else if (userTurn === userNumber) {
+            const input = document.getElementById("messageInput").value;
+            console.log(input);
+            sendMessage({ roomNum: roomNumber, value: input, userNum: userNumber })
+        } else {
+            console.log("당신차례아님")
+        }
     })
 
     // 방 입장 이벤트
     document.getElementById("roomInput").addEventListener("click", (event) => {
         const input = document.getElementById("messageInput").value;
-        intoRoom(input, answer)
+        intoRoom(input)
     })
 </script>
